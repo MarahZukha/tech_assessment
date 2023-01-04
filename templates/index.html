@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Add a geocoder</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mapp.css') }}">
+<!--<link rel="stylesheet" href="{{ url_for('static', filename='js/mapp.js') }}">-->
+
+</head>
+<body>
+<!-- Load the `mapbox-gl-geocoder` plugin. -->
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+
+<h2 class="map_heading">Maps</h2>
+<!--input box and button with a span for errors and loading spinner button-->
+<div class="container">
+    <input class="inputBox" type="text" id="city" placeholder="Enter the city you want to find" />
+    <span id="error"></span>
+	<button type="submit" class="button" onclick="getlonlat()">
+        <span class="button__text">Search</span>
+    </button>
+
+ </div>
+ <div id="map"style='width: 95%; height:500px;'></div>
+
+ <script src="https://unpkg.com/@mapbox/mapbox-sdk/umd/mapbox-sdk.min.js"></script>
+ <script>
+
+    var longitude, latitude;
+    function getlonlat(){
+        //loading spinner-->
+        const btn = document.querySelector(".button");
+        btn.classList.add("button--loading");
+        
+        //getting the city name fron the input box
+        var city = document.getElementById("city").value;
+        var error = document.getElementById("error")
+        //checking if the entered city is an empty string or invalid
+        if(typeof city=== "string" && city.trim()===""){
+            error.textContent = "Please enter a valid city name"
+            error.style.color = "red"
+            btn.classList.remove("button--loading");
+
+        } else {
+            error.textContent = ""
+        }
+//the api ninjas geocode
+        $.ajax({
+            method: 'GET',
+            url: 'https://api.api-ninjas.com/v1/geocoding?city=' + city,
+            headers: { 'X-Api-Key': 'kzsLsYJ2Ho3XCgO8CEPo/Q==ZMyV4xbbMOw5mPjC'},
+            contentType: 'application/json',
+        success: function(result) {
+            console.log(result[0].latitude);
+            console.log(result[0].longitude);
+            //getting the longitude and latitude from the geocode api and storing them in variables
+            longitude= result[0].longitude+'';
+            latitude = result[0].latitude+'';
+            //converting longitude and latitude to string
+            JSON.stringify(longitude);
+            JSON.stringify(latitude);
+            mapboxgl.accessToken = "{{mapbox_access_token}}";
+            const map = new mapboxgl.Map({
+    container: 'map',
+    // Choose from Mapbox's core styles
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [longitude, latitude],
+    zoom: 13
+    });
+    map.addControl(new mapboxgl.FullscreenControl());
+    // display a blue marker
+    var marker = new mapboxgl.Marker()
+              .setLngLat([longitude,latitude])
+              .addTo(map);
+              // Navigation marker at top-left corner
+    var nav = new mapboxgl.NavigationControl();
+    map.addControl(nav, 'top-left');
+    btn.classList.remove("button--loading");
+
+        },
+        error: function ajaxError(jqXHR) {
+            console.error('Error: ', jqXHR.responseText);
+        }
+            
+    });
+    
+    
+    }
+    
+    </script>
+</body>
+</html>
